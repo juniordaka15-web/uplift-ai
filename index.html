@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<title>UPLIFT AI</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#172033;
+  --muted:#718096;
+  --accent:#6d5dfc;
+  --accent2:#8b7cff;
+  --border:#e7eaf1;
+  --user:#6d5dfc;
+  --ai:#ffffff;
+  --shadow:0 10px 35px rgba(20,30,60,.08)
+}
+body.dark{
+  --bg:#0d1117;
+  --card:#161b22;
+  --text:#f1f5f9;
+  --muted:#9aa5b1;
+  --border:#28303b;
+  --ai:#161b22;
+  --shadow:0 10px 35px rgba(0,0,0,.3)
+}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer;border:0}
+.app{
+  max-width:650px;
+  margin:auto;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+  padding:15px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:11px
+}
+.logo{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:19px
+}
+.brand h1{font-size:18px}
+.brand p{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:2px
+}
+.icon-btn{
+  width:40px;
+  height:40px;
+  border-radius:13px;
+  background:var(--bg);
+  color:var(--text);
+  border:1px solid var(--border)
+}
+main{
+  flex:1;
+  padding:20px 15px 120px
+}
+.welcome{
+  padding:20px 4px 18px
+}
+.welcome h2{
+  font-size:27px;
+  margin-bottom:8px
+}
+.welcome p{
+  color:var(--muted);
+  line-height:1.5
+}
+.quick{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:4px 0 17px
+}
+.quick button{
+  white-space:nowrap;
+  padding:10px 14px;
+  border-radius:20px;
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--border)
+}
+.chat{
+  display:flex;
+  flex-direction:column;
+  gap:13px
+}
+.msg{
+  max-width:88%;
+  padding:13px 15px;
+  border-radius:18px;
+  line-height:1.5;
+  font-size:15px;
+  white-space:pre-wrap
+}
+.msg.ai{
+  align-self:flex-start;
+  background:var(--ai);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  border-bottom-left-radius:6px
+}
+.msg.user{
+  align-self:flex-end;
+  background:var(--user);
+  color:white;
+  border-bottom-right-radius:6px
+}
+.typing{
+  display:none;
+  align-self:flex-start;
+  padding:12px 16px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px
+}
+.typing span{
+  display:inline-block;
+  width:6px;
+  height:6px;
+  background:var(--muted);
+  border-radius:50%;
+  margin:0 2px;
+  animation:bounce 1s infinite
+}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{
+  0%,80%,100%{transform:translateY(0)}
+  40%{transform:translateY(-5px)}
+}
+.bottom{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  max-width:650px;
+  margin:auto;
+  padding:10px 12px 13px;
+  background:var(--card);
+  border-top:1px solid var(--border)
+}
+.input-row{
+  display:flex;
+  gap:8px;
+  align-items:flex-end
+}
+textarea{
+  flex:1;
+  min-height:48px;
+  max-height:120px;
+  resize:none;
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:14px;
+  outline:none;
+  background:var(--bg);
+  color:var(--text)
+}
+textarea:focus{border-color:var(--accent)}
+.send,.mic{
+  width:48px;
+  height:48px;
+  border-radius:15px;
+  color:white;
+  background:var(--accent);
+  font-size:19px
+}
+.mic{
+  background:var(--bg);
+  color:var(--text);
+  border:1px solid var(--border)
+}
+.mic.active{
+  background:#ef4444;
+  color:white
+}
+.status{
+  text-align:center;
+  font-size:10px;
+  color:var(--muted);
+  padding-top:6px
+}
+.panel{
+  position:fixed;
+  inset:0;
+  z-index:30;
+  display:none;
+  background:rgba(0,0,0,.45)
+}
+.panel.open{display:block}
+.panel-card{
+  position:absolute;
+  right:0;
+  top:0;
+  bottom:0;
+  width:min(92%,380px);
+  background:var(--card);
+  padding:22px;
+  overflow:auto
+}
+.panel-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px
+}
+.setting{
+  padding:16px 0;
+  border-bottom:1px solid var(--border)
+}
+.setting h3{font-size:15px;margin-bottom:5px}
+.setting p{font-size:12px;color:var(--muted);line-height:1.5}
+.switch{
+  margin-top:10px;
+  padding:10px 14px;
+  border-radius:12px;
+  background:var(--bg);
+  color:var(--text);
+  border:1px solid var(--border)
+}
+.clear{
+  margin-top:10px;
+  padding:11px 14px;
+  border-radius:12px;
+  background:#ef4444;
+  color:white
+}
+.premium{
+  margin-top:18px;
+  padding:18px;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--accent),#9b8cff);
+  color:white
+}
+.premium h3{margin-bottom:7px}
+.premium p{font-size:12px;line-height:1.5}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <div class="brand">
+    <div class="logo">U</div>
+    <div>
+      <h1>UPLIFT</h1>
+      <p>Personal growth & student companion</p>
+    </div>
+  </div>
+  <button class="icon-btn" id="settingsBtn">⚙️</button>
+</header>
+
+<main>
+  <section class="welcome" id="welcome">
+    <h2>Hey 👋</h2>
+    <p>
+      I'm UPLIFT. Tell me what's going on, and we'll work through it
+      together — one step at a time.
+    </p>
+  </section>
+
+  <div class="quick">
+    <button data-msg="I'm struggling with my studies.">📚 Study help</button>
+    <button data-msg="I feel stressed and overwhelmed.">🧠 Stress</button>
+    <button data-msg="Help me plan my day.">🎯 Plan my day</button>
+    <button data-msg="I need some motivation.">🔥 Motivation</button>
+  </div>
+
+  <section class="chat" id="chat"></section>
+
+  <div class="typing" id="typing">
+    <span></span><span></span><span></span>
+  </div>
+</main>
+
+<div class="bottom">
+  <div class="input-row">
+    <button class="mic" id="micBtn">🎤</button>
+    <textarea id="input" placeholder="Talk to UPLIFT..." rows="1"></textarea>
+    <button class="send" id="sendBtn">➤</button>
+  </div>
+  <div class="status" id="status">
+    UPLIFT v7 • AI connection ready
+  </div>
+</div>
+
+</div>
+
+<div class="panel" id="settingsPanel">
+  <div class="panel-card">
+    <div class="panel-head">
+      <h2>UPLIFT Settings</h2>
+      <button class="icon-btn" id="closeSettings">✕</button>
+    </div>
+
+    <div class="premium">
+      <h3>⭐ UPLIFT Premium</h3>
+      <p>
+        Your personal growth companion with conversations,
+        voice interaction, progress support and adaptive memory.
+      </p>
+    </div>
+
+    <div class="setting">
+      <h3>🌙 Appearance</h3>
+      <p>Switch between light and dark mode.</p>
+      <button class="switch" id="themeBtn">Toggle theme</button>
+    </div>
+
+    <div class="setting">
+      <h3>🔊 Voice responses</h3>
+      <p>UPLIFT can speak responses using your device's available voice.</p>
+      <button class="switch" id="voiceBtn">Voice: ON</button>
+    </div>
+
+    <div class="setting">
+      <h3>🧠 Conversation memory</h3>
+      <p>
+        This prototype stores conversation data locally on this device.
+      </p>
+      <button class="clear" id="clearBtn">Clear local memory</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   UPLIFT v7
+   Frontend response engine
+   Backend/API connection can be added here later.
+   ========================================================= */
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const micBtn = document.getElementById("micBtn");
+const typing = document.getElementById("typing");
+const status = document.getElementById("status");
+
+let voiceEnabled = true;
+let messages = JSON.parse(localStorage.getItem("uplift_messages") || "[]");
+
+function saveMessages(){
+  localStorage.setItem("uplift_messages", JSON.stringify(messages));
+}
+
+function addMessage(text, role, save=true){
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.textContent = text;
+  chat.appendChild(div);
+
+  if(save){
+    messages.push({
+      role,
+      text,
+      time: Date.now()
+    });
+    saveMessages();
+  }
+
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior:"smooth"
+  });
+}
+
+function renderMessages(){
+  chat.innerHTML = "";
+
+  if(messages.length === 0){
+    addMessage(
+      "I'm here with you. You can talk to me about your studies, goals, stress, motivation, planning, or anything you're trying to improve.",
+      "ai",
+      false
+    );
+    return;
+  }
+
+  messages.forEach(m => {
+    addMessage(m.text, m.role, false);
+  });
+}
+
+function showTyping(show){
+  typing.style.display = show ? "block" : "none";
+}
+
+function detectTopic(text){
+  const t = text.toLowerCase();
+
+  if(/suicid|kill myself|end my life|self harm|hurt myself/.test(t))
+    return "safety";
+
+  if(/study|exam|school|class|assignment|nursing|revision|read/.test(t))
+    return "study";
+
+  if(/stress|stressed|overwhelmed|pressure|anxious|anxiety|worried/.test(t))
+    return "stress";
+
+  if(/sad|lonely|alone|cry|depressed|down|heartbroken/.test(t))
+    return "emotion";
+
+  if(/motivat|lazy|discipline|procrastinat|can't start|cannot start/.test(t))
+    return "motivation";
+
+  if(/plan|schedule|timetable|routine|today|tomorrow/.test(t))
+    return "planning";
+
+  if(/money|business|income|sell|entrepreneur/.test(t))
+    return "business";
+
+  if(/hello|hi|hey|good morning|good evening/.test(t))
+    return "greeting";
+
+  return "general";
+}
+
+function generateResponse(text){
+  const topic = detectTopic(text);
+  const t = text.toLowerCase();
+
+  if(topic === "safety"){
+    return `I'm really glad you told me. You don't have to handle this moment alone.
+
+If you may hurt yourself or you are in immediate danger, please move away from anything you could use to hurt yourself and get a trusted person physically with you now.
+
+Please contact your local emergency service or go to the nearest emergency department.
+
+For this moment, let's focus only on staying safe. Are you in immediate danger right now?`;
+  }
+
+  if(topic === "greeting"){
+    return "Hey 👋 I'm here. What's on your mind today?";
+  }
+
+  if(topic === "study"){
+    return `Let's make this manageable.
+
+📚 First step: choose ONE subject or topic.
+
+🎯 Then work for 25 minutes without switching tasks.
+
+📝 After that, close your notes and explain what you remember in your own words.
+
+If you're preparing for an exam, tell me the subject and topic and I'll help you break it into a simple study plan.`;
+  }
+
+  if(topic === "stress"){
+    return `I hear you. When everything feels like too much, don't try to solve everything at once.
+
+Let's do this:
+
+1. Take one slow breath.
+2. Identify the ONE thing causing the most pressure.
+3. Decide the smallest useful action you can take in the next 10 minutes.
+
+You don't need to fix your whole life today. You only need to take the next step.
+
+What is putting the most pressure on you right now?`;
+  }
+
+  if(topic === "emotion"){
+    return `That sounds heavy, and I'm glad you said something instead of keeping it all inside.
+
+You don't have to pretend you're okay with me.
+
+Let's take it one piece at a time. Tell me what happened, or simply tell me what you're feeling right now.
+
+I'm listening.`;
+  }
+
+  if(topic === "motivation"){
+    return `Don't wait until you feel motivated.
+
+Start extremely small.
+
+🎯 Pick one task.
+⏱️ Give it 5 minutes.
+📵 Remove one distraction.
+✅ Finish that first small action.
+
+Action often creates motivation — not the other way around.
+
+What is the one thing you've been putting off?`;
+  }
+
+  if(topic === "planning"){
+    return `Let's build a realistic plan rather than an overwhelming one.
+
+For today, choose:
+
+1️⃣ One important task
+2️⃣ One study task
+3️⃣ One personal/life task
+4️⃣ One thing for your health
+
+Start with the most important task.
+
+If you tell me what you need to accomplish today, I'll help you arrange it in order.`;
+  }
+
+  if(topic === "business"){
+    return `Good. Let's think practically.
+
+A simple business framework is:
+
+Problem → Person → Solution → Value → Payment.
+
+Don't start by asking, "What can I sell?"
+
+Start with:
+"What problem can I solve for a specific group of people?"
+
+Tell me the business idea you're considering and we'll develop it step by step.`;
+  }
+
+  if(t.includes("thank")){
+    return "You're welcome. 🤝 Keep going — one step at a time.";
+  }
+
+  return `I'm listening.
+
+From what you've told me, I want to understand the situation before jumping straight into advice.
+
+Tell me a little more about what is happening, and we'll work through it together.
+
+Then I'll help you identify:
+• what's really going on
+• what you can control
+• the best next action
+• how we'll check your progress`;
+}
+
+function speak(text){
+  if(!voiceEnabled) return;
+  if(!("speechSynthesis" in window)) return;
+
+  speechSynthesis.cancel();
+
+  const clean = text
+    .replace(/[•🎯📚🧠🔥1️⃣2️⃣3️⃣4️⃣]/g,"");
+
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.rate = 0.96;
+  utterance.pitch = 1.02;
+  utterance.volume = 1;
+
+  speechSynthesis.speak(utterance);
+}
+
+function sendMessage(){
+  const text = input.value.trim();
+  if(!text) return;
+
+  addMessage(text,"user");
+  input.value = "";
+  input.style.height = "48px";
+
+  showTyping(true);
+  status.textContent = "UPLIFT is thinking...";
+
+  setTimeout(() => {
+    const response = generateResponse(text);
+
+    showTyping(false);
+    addMessage(response,"ai");
+    speak(response);
+
+    status.textContent = "UPLIFT is ready";
+  }, 650);
+}
+
+sendBtn.addEventListener("click",sendMessage);
+
+input.addEventListener("keydown",e=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+input.addEventListener("input",()=>{
+  input.style.height = "48px";
+  input.style.height = Math.min(input.scrollHeight,120) + "px";
+});
+
+document.querySelectorAll(".quick button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    input.value = btn.dataset.msg;
+    sendMessage();
+  });
+});
+
+/* Voice input */
+let recognition = null;
+
+if("SpeechRecognition" in window || "webkitSpeechRecognition" in window){
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.continuous = false;
+
+  recognition.onstart = ()=>{
+    micBtn.classList.add("active");
+    status.textContent = "Listening...";
+  };
+
+  recognition.onend = ()=>{
+    micBtn.classList.remove("active");
+    status.textContent = "UPLIFT is ready";
+  };
+
+  recognition.onresult = e=>{
+    input.value = e.results[0][0].transcript;
+    sendMessage();
+  };
+
+  recognition.onerror = ()=>{
+    micBtn.classList.remove("active");
+    status.textContent = "Voice input unavailable";
+  };
+}
+
+micBtn.addEventListener("click",()=>{
+  if(!recognition){
+    alert("Voice input is not supported by this browser.");
+    return;
+  }
+
+  try{
+    recognition.start();
+  }catch(e){}
+});
+
+/* Settings */
+const settingsPanel = document.getElementById("settingsPanel");
+
+document.getElementById("settingsBtn").onclick = ()=>{
+  settingsPanel.classList.add("open");
+};
+
+document.getElementById("closeSettings").onclick = ()=>{
+  settingsPanel.classList.remove("open");
+};
+
+document.getElementById("themeBtn").onclick = ()=>{
+  document.body.classList.toggle("dark");
+  localStorage.setItem(
+    "uplift_theme",
+    document.body.classList.contains("dark") ? "dark" : "light"
+  );
+};
+
+document.getElementById("voiceBtn").onclick = ()=>{
+  voiceEnabled = !voiceEnabled;
+  document.getElementById("voiceBtn").textContent =
+    "Voice: " + (voiceEnabled ? "ON" : "OFF");
+};
+
+document.getElementById("clearBtn").onclick = ()=>{
+  if(confirm("Clear UPLIFT's local conversation memory?")){
+    localStorage.removeItem("uplift_messages");
+    messages = [];
+    renderMessages();
+  }
+};
+
+if(localStorage.getItem("uplift_theme") === "dark"){
+  document.body.classList.add("dark");
+}
+
+renderMessages();
+</script>
+
+</body>
+</html>
